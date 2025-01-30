@@ -26,7 +26,6 @@ document.addEventListener("DOMContentLoaded", function () {
           (tab) => tab.id === activeTab.id
         );
         const tabsToProcess = allTabs.slice(activeTabIndex);
-
         tabsToProcess.forEach((tab) => {
           chrome.scripting.executeScript(
             {
@@ -78,6 +77,70 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   button3.addEventListener("click", function () {
-    console.log("Button 3 clicked");
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      const activeTab = tabs[0];
+      chrome.scripting.executeScript(
+        {
+          target: { tabId: activeTab.id },
+          function: () => {
+            const scrapedData = {};
+            const selectors = [
+              "input[name='empr_name']",
+              "input[name='empr_phone']",
+              "input[name='empr_address1']",
+              "input[name='ref_first_name']",
+              "input[name='ref_last_name']",
+              "input[name='ref_relation_to']",
+              "input[name='ref_phone']",
+            ];
+
+            selectors.forEach((selector) => {
+              const el = document.querySelector(selector);
+              scrapedData[selector] = el
+                ? (el.value || el.innerText).trim()
+                : "Not found";
+            });
+            return scrapedData;
+          },
+        },
+        function (injectionResults) {
+          if (chrome.runtime.lastError) {
+            return console.error(chrome.runtime.lastError);
+          }
+          if (
+            injectionResults &&
+            injectionResults.length > 0 &&
+            injectionResults[0].result
+          ) {
+            const scrapedData = injectionResults[0].result;
+            const tsvString = createSingleRowTSV(scrapedData);
+            copyToClipboard(tsvString);
+          }
+        }
+      );
+    });
   });
 });
+function createSingleRowTSV(scrapedData) {
+  const firstName = scrapedData["input[name='ref_first_name']"];
+  const lastName = scrapedData["input[name='ref_last_name']"];
+  const relation = scrapedData["input[name='ref_relation_to']"];
+  const combinedName = `${firstName} ${lastName} ${relation}`;
+  const row = [
+    scrapedData["input[name='empr_name']"],
+    scrapedData["input[name='empr_phone']"],
+    scrapedData["input[name='empr_address1']"],
+    combinedName,
+    scrapedData["input[name='ref_phone']"],
+  ];
+  return row.join("\t");
+}
+
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(
+    function () {},
+    function (err) {
+      console.error("Could not copy text: ", err);
+    }
+  );
+}
