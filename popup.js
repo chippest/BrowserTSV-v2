@@ -5,10 +5,11 @@ document.addEventListener("DOMContentLoaded", function () {
   const emailListTextArea = document.getElementById("emailList");
 
   button1.addEventListener("click", function () {
-    const emailsText = emailListTextArea.value;
+    let emailsText = emailListTextArea.value;
     const emails = emailsText
       .split("\n")
       .map((email) => email.trim())
+      .map((email) => email.replace(/^"|"$/g, ""))
       .filter((email) => email);
 
     emails.forEach((email) => {
@@ -75,6 +76,7 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     });
   });
+
   button3.addEventListener("click", function () {
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       const activeTab = tabs[0];
@@ -141,7 +143,7 @@ function createSingleRowTSV(scrapedData) {
   const firstName = scrapedData["input[name='ref_first_name']"];
   const lastName = scrapedData["input[name='ref_last_name']"];
   const relation = scrapedData["input[name='ref_relation_to']"];
-  const combinedName = `${firstName}|${lastName}|${relation}`;
+  const combinedName = `${firstName} ${lastName} | ${relation}`;
   const emprPhone = scrapedData["input[name='empr_phone']"];
   const refPhone = scrapedData["input[name='ref_phone']"];
 
@@ -164,9 +166,9 @@ function createSingleRowTSV(scrapedData) {
     combinedName === "" ? "/" : combinedName,
     formattedRefPhone === "" ? "/" : formattedRefPhone,
   ].map((cell) => (cell === "Not found" ? "/" : cell));
+
   return row.join("\t");
 }
-
 function copyToClipboard(text) {
   navigator.clipboard.writeText(text).then(
     function () {},
