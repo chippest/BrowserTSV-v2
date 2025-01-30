@@ -75,49 +75,65 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     });
   });
-
   button3.addEventListener("click", function () {
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       const activeTab = tabs[0];
-      chrome.scripting.executeScript(
-        {
-          target: { tabId: activeTab.id },
-          function: () => {
-            const scrapedData = {};
-            const selectors = [
-              "input[name='empr_name']",
-              "input[name='empr_phone']",
-              "input[name='empr_address1']",
-              "input[name='ref_first_name']",
-              "input[name='ref_last_name']",
-              "input[name='ref_relation_to']",
-              "input[name='ref_phone']",
-            ];
+      chrome.tabs.query({ currentWindow: true }, function (allTabs) {
+        const activeTabIndex = allTabs.findIndex(
+          (tab) => tab.id === activeTab.id
+        );
+        const tabsToProcess = allTabs.slice(activeTabIndex);
 
-            selectors.forEach((selector) => {
-              const el = document.querySelector(selector);
-              scrapedData[selector] = el
-                ? (el.value || el.innerText).trim()
-                : "Not found";
-            });
-            return scrapedData;
-          },
-        },
-        function (injectionResults) {
-          if (chrome.runtime.lastError) {
-            return console.error(chrome.runtime.lastError);
-          }
-          if (
-            injectionResults &&
-            injectionResults.length > 0 &&
-            injectionResults[0].result
-          ) {
-            const scrapedData = injectionResults[0].result;
-            const tsvString = createSingleRowTSV(scrapedData);
-            copyToClipboard(tsvString);
-          }
-        }
-      );
+        const allPromises = tabsToProcess.map((tab) => {
+          return new Promise((resolve) => {
+            chrome.scripting.executeScript(
+              {
+                target: { tabId: tab.id },
+                function: () => {
+                  const scrapedData = {};
+                  const selectors = [
+                    "input[name='empr_name']",
+                    "input[name='empr_phone']",
+                    "input[name='empr_address1']",
+                    "input[name='ref_first_name']",
+                    "input[name='ref_last_name']",
+                    "input[name='ref_relation_to']",
+                    "input[name='ref_phone']",
+                  ];
+                  selectors.forEach((selector) => {
+                    const el = document.querySelector(selector);
+                    scrapedData[selector] = el
+                      ? (el.value || el.innerText).trim()
+                      : "Not found";
+                  });
+                  return scrapedData;
+                },
+              },
+              function (injectionResults) {
+                if (chrome.runtime.lastError) {
+                  return console.error(chrome.runtime.lastError);
+                }
+                if (
+                  injectionResults &&
+                  injectionResults.length > 0 &&
+                  injectionResults[0].result
+                ) {
+                  const scrapedData = injectionResults[0].result;
+                  const tsvRow = createSingleRowTSV(scrapedData);
+                  resolve(tsvRow);
+                } else {
+                  resolve(null);
+                }
+              }
+            );
+          });
+        });
+        Promise.all(allPromises).then((allResults) => {
+          const validResults = allResults.filter((result) => result !== null);
+          const tsvString = validResults.join("\n");
+          copyToClipboard(tsvString);
+        });
+      });
     });
   });
 });
@@ -136,7 +152,6 @@ function createSingleRowTSV(scrapedData) {
     refPhone === "Not found"
       ? "Not found"
       : refPhone.replace(/\D/g, "").substring(1);
-
   const row = [
     scrapedData["input[name='empr_name']"] === ""
       ? "/"
@@ -148,6 +163,7 @@ function createSingleRowTSV(scrapedData) {
     combinedName === "" ? "/" : combinedName,
     formattedRefPhone === "" ? "/" : formattedRefPhone,
   ].map((cell) => (cell === "Not found" ? "/" : cell));
+
   return row.join("\t");
 }
 
