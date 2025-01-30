@@ -25,9 +25,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const activeTabIndex = allTabs.findIndex(
           (tab) => tab.id === activeTab.id
         );
-        const nextTabIndex = (activeTabIndex + 1) % allTabs.length;
-        const nextTab = allTabs[nextTabIndex];
-        const tabsToProcess = [activeTab, nextTab];
+        const tabsToProcess = allTabs.slice(activeTabIndex);
 
         tabsToProcess.forEach((tab) => {
           chrome.scripting.executeScript(
