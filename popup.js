@@ -19,52 +19,9 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   button2.addEventListener("click", function () {
-    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-      const activeTab = tabs[0];
-      chrome.scripting.executeScript(
-        {
-          target: { tabId: activeTab.id },
-          function: () => {
-            const table = document.querySelector(
-              ".table.align-middle.table-condensed.table-row-dashed.fs-6.gy-1.gx-1"
-            );
-            if (table) {
-              const customerIds = Array.from(table.querySelectorAll("tbody tr"))
-                .map((row) => {
-                  const idCell = row.querySelector("td");
-                  if (idCell) {
-                    return idCell.innerText.trim();
-                  }
-                  return null;
-                })
-                .filter((id) => id);
-              return customerIds;
-            }
-            return null;
-          },
-        },
-        function (injectionResults) {
-          if (chrome.runtime.lastError) {
-            return console.error(chrome.runtime.lastError);
-          }
-          if (
-            injectionResults &&
-            injectionResults.length > 0 &&
-            injectionResults[0].result
-          ) {
-            const customerIds = injectionResults[0].result;
-            if (customerIds) {
-              customerIds.forEach((id) => {
-                const idNum = id.replace("CCB-", "");
-                const url = `https://loan.cashcowboy.net/customers/${idNum}`;
-                chrome.tabs.update({ url: url });
-              });
-            }
-          }
-        }
-      );
-    });
+    console.log("Button 2 clicked");
   });
+
   button3.addEventListener("click", function () {
     console.log("Button 3 clicked");
   });
