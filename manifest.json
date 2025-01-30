@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "Button Extension",
+  "version": "1.0",
+  "description": "An extension with three buttons in the popup.",
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "permissions": ["tabs", "activeTab", "scripting"],
+  "host_permissions": ["<all_urls>"]
+}
