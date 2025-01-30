@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Button Extension",
+  "name": "OverdueExcelTSV",
   "version": "1.0",
-  "description": "An extension with three buttons in the popup.",
+  "description": "Another extension to make our lives easier 🙏",
   "action": {
     "default_popup": "popup.html"
   },
