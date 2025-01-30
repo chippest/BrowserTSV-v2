@@ -128,7 +128,6 @@ function createSingleRowTSV(scrapedData) {
   const combinedName = `${firstName} ${lastName} ${relation}`;
   const emprPhone = scrapedData["input[name='empr_phone']"];
   const refPhone = scrapedData["input[name='ref_phone']"];
-
   const formattedEmprPhone =
     emprPhone === "Not found"
       ? "Not found"
@@ -139,12 +138,16 @@ function createSingleRowTSV(scrapedData) {
       : refPhone.replace(/\D/g, "").substring(1);
 
   const row = [
-    scrapedData["input[name='empr_name']"],
-    formattedEmprPhone,
-    scrapedData["input[name='empr_address1']"],
-    combinedName,
-    formattedRefPhone,
-  ];
+    scrapedData["input[name='empr_name']"] === ""
+      ? "/"
+      : scrapedData["input[name='empr_name']"],
+    formattedEmprPhone === "" ? "/" : formattedEmprPhone,
+    scrapedData["input[name='empr_address1']"] === ""
+      ? "/"
+      : scrapedData["input[name='empr_address1']"],
+    combinedName === "" ? "/" : combinedName,
+    formattedRefPhone === "" ? "/" : formattedRefPhone,
+  ].map((cell) => (cell === "Not found" ? "/" : cell));
   return row.join("\t");
 }
 
