@@ -126,12 +126,24 @@ function createSingleRowTSV(scrapedData) {
   const lastName = scrapedData["input[name='ref_last_name']"];
   const relation = scrapedData["input[name='ref_relation_to']"];
   const combinedName = `${firstName} ${lastName} ${relation}`;
+  const emprPhone = scrapedData["input[name='empr_phone']"];
+  const refPhone = scrapedData["input[name='ref_phone']"];
+
+  const formattedEmprPhone =
+    emprPhone === "Not found"
+      ? "Not found"
+      : emprPhone.replace(/\D/g, "").substring(1);
+  const formattedRefPhone =
+    refPhone === "Not found"
+      ? "Not found"
+      : refPhone.replace(/\D/g, "").substring(1);
+
   const row = [
     scrapedData["input[name='empr_name']"],
-    scrapedData["input[name='empr_phone']"],
+    formattedEmprPhone,
     scrapedData["input[name='empr_address1']"],
     combinedName,
-    scrapedData["input[name='ref_phone']"],
+    formattedRefPhone,
   ];
   return row.join("\t");
 }
